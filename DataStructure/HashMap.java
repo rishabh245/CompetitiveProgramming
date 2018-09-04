@@ -18,10 +18,12 @@ class HashMap<K,V>{
 
     private ArrayList<MapNode<K,V>> bucket ;
     private int bucketSize;
+    private int size;
 
     public HashMap(){
         bucket = new ArrayList<MapNode<K,V>>();
-        bucketSize = 20;
+        bucketSize = 10;
+        size = 0;
         for(int i=0;i<20;i++){
             bucket.add(null);
         }
@@ -44,10 +46,40 @@ class HashMap<K,V>{
             head = head.next;
         }
         MapNode<K,V> newNode = new MapNode<K,V>(key,value);
+        size++;
         newNode.next = bucket.get(bucketIndex);
         bucket.set(bucketIndex,newNode);
+        double loadFactor = loadFactor();
+        if(loadFactor>0.7){
+            rehash();
+        }
+    }
+
+    private void rehash(){
+        bucketSize *= 2;
+        size = 0;
+        ArrayList<MapNode<K,V>> temp = bucket;
+        bucket = new ArrayList<MapNode<K,V>>();
+        for(int i=0;i<bucketSize;i++){
+            bucket.add(null);
+        } 
+        for(int i=0;i<temp.size();i++){
+            MapNode<K,V> head = temp.get(i);
+            while(head!=null){
+                K key = head.key;
+                V value = head.value;
+                put(key,value);
+                head = head.next;
+            }
+        }
     }
     
+    public double loadFactor(){
+        double loadFactor = (1.0 * size)/bucketSize;
+        return loadFactor;
+    }
+
+
     public V get(K key){
         int bucketIndex = getBucketIndex(key);
         MapNode<K,V> head = bucket.get(bucketIndex);
@@ -77,6 +109,7 @@ class HashMap<K,V>{
         int bucketIndex = getBucketIndex(key);
         MapNode<K,V> head = bucket.get(bucketIndex);
         if(head.key.equals(key)){
+            size--;
             bucket.set(bucketIndex,head.next);
             return head.value;
         }
@@ -113,6 +146,40 @@ public class Main {
             System.out.println("4: " + map.removeKey("abc"));
        }
        System.out.println("5: " + map.containsKey("abc"));
-
+       map.put("pqr",6);
+       System.out.println("Load Factor: " + map.loadFactor());
+       map.put("tvb",7);
+       System.out.println("Load Factor: " + map.loadFactor());
+       map.put("oio",8);
+       System.out.println("Load Factor: " + map.loadFactor());
+       map.put("gsg",9);
+       System.out.println("Load Factor: " + map.loadFactor());
+       map.put("rty",6);
+       System.out.println("Load Factor: " + map.loadFactor());
+       map.put("tvk",7);
+       System.out.println("Load Factor: " + map.loadFactor());
+       map.put("owe",8);
+       System.out.println("Load Factor: " + map.loadFactor());
+       map.put("gdf",9);
+       System.out.println("Load Factor: " + map.loadFactor());
     }
 }
+
+
+/* Output
+
+1: 1
+2: 2
+3: 4
+4: 4
+5: false
+Load Factor: 0.2
+Load Factor: 0.3
+Load Factor: 0.4
+Load Factor: 0.5
+Load Factor: 0.6
+Load Factor: 0.7
+Load Factor: 0.4
+Load Factor: 0.45
+
+*/
